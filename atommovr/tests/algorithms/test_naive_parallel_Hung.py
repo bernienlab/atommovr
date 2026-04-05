@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
-import pytest
 
-from atommovr.algorithms.dual_species import NaiveParHung
 from atommovr.algorithms.source.naive_parallel_Hung import (
     find_smallest_l,
     define_current_and_target_naive_par,
@@ -17,8 +15,6 @@ from atommovr.utils.AtomArray import AtomArray
 from atommovr.utils.Move import Move
 from atommovr.tests.support.helpers import (
     _n_atoms,
-    _moves_to_tuples,
-    _replay_and_check_noiseless_conservation,
 )
 
 
@@ -282,7 +278,9 @@ class TestTransformPathsIntoMovesNaivePar:
         # Create dummy paths (list of Move objects)
         dummy_paths = []
 
-        aa_result, moves = transform_paths_into_moves_naive_par(aa, dummy_paths, max_rounds=1)
+        aa_result, moves = transform_paths_into_moves_naive_par(
+            aa, dummy_paths, max_rounds=1
+        )
 
         # Atom count should be unchanged
         assert _n_atoms(aa_result.matrix) == initial_count
@@ -417,9 +415,10 @@ class TestNaiveParHung:
         for round_idx, round_moves in enumerate(moves):
             assert isinstance(round_moves, list), f"Round {round_idx} is not a list"
             for move in round_moves:
-                assert isinstance(move, Move), f"Round {round_idx} contains non-Move object"
+                assert isinstance(
+                    move, Move
+                ), f"Round {round_idx} contains non-Move object"
                 assert isinstance(move.from_row, int)
                 assert isinstance(move.from_col, int)
                 assert isinstance(move.to_row, int)
                 assert isinstance(move.to_col, int)
-

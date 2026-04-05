@@ -537,50 +537,50 @@ void printMatrix(int *col_ptrs, int *fend_cols, int *col_ids, double *col_vals, 
 	{
 		return;/*do nothing for large*/
 	}	
-	double myA[m][n];
+	double *myA = (double*)malloc(m * n * sizeof(double));
 	for (i = 0; i < m; i++)
-	{		
+	{
 		for (j = 0; j < n; j++)
-			myA[i][j] = 0.0;
+			myA[i * n + j] = 0.0;
 	}
 	for (j= 0; j < n; j++)
 	{
 		for (int z = col_ptrs[j]; z <= fend_cols[j]; z++)
 		{
-			myA[col_ids[z]][j] = col_vals[z];
-		}				
+			myA[col_ids[z] * n + j] = col_vals[z];
+		}
 	}
 	for (i = 0; i < m; i++)
 	{
 		for (j = 0; j < n; j++)
 		{
-			myPrintf(" %.4f", myA[i][j]);
+			myPrintf(" %.4f", myA[i * n + j]);
 		}
 		myPrintf("\n");
 	}
 	myPrintf("=========Other view==========\n");
 	for (i = 0; i < m; i++)
-	{		
+	{
 		for (j = 0; j < n; j++)
-			myA[i][j] = 0.0;
+			myA[i * n + j] = 0.0;
 	}
 	for (i= 0; i < m; i++)
 	{
 		for (int z = row_ptrs[i]; z <= fend_rows[i]; z++)
 		{
-			myA[i][row_ids[z]] = row_vals[z];
-		}				
+			myA[i * n + row_ids[z]] = row_vals[z];
+		}
 	}
 	for (i = 0; i < m; i++)
 	{
 		for (j = 0; j < n; j++)
 		{
-			myPrintf(" %.4f", myA[i][j]);
+			myPrintf(" %.4f", myA[i * n + j]);
 		}
 		myPrintf("\n");
 	}
+	free(myA);
 }
-
 void minheapverify(int qsz, double *vals)
 {
 	int i;
@@ -990,6 +990,9 @@ double bidFromOneSide(int startblock, int endblock, int *cprm, int *col_ptrs, in
 * int sprankknown: if sprankknown == 0 at the beginning it is computed by this subroutine,
 * 	otherwise, it is aqssumed to be equal to the sprank.
 */
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
 int bttlThreshold(int *col_ptrs, int *col_ids, double *col_vals, int n, int m, int *match, int *row_match, 
 		int *row_ptrs, 
 		int *row_ids,

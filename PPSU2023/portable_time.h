@@ -11,13 +11,7 @@
 #pragma comment(lib, "ws2_32.lib")  // Link Winsock for select()
 
 // timeval structure (not in Windows by default unless winsock is included)
-#ifndef _TIMEVAL_DEFINED
-#define _TIMEVAL_DEFINED
-struct timeval {
-    long tv_sec;
-    long tv_usec;
-};
-#endif
+// Under Windows winsock2.h defines timeval, so we shouldn't redefine it.
 
 // Emulate gettimeofday()
 static inline int gettimeofday(struct timeval *tp, void *tzp) {

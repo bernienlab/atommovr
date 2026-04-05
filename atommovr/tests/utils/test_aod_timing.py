@@ -1,7 +1,7 @@
 """
 Authors: Claude, ChatGPT, Nikhil Harle
 Description: Tests for AOD timing analysis functions
-(see `atommover.utils.aod_timing`)
+(see `atommovr.utils.aod_timing`)
 """
 
 import pytest

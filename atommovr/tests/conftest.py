@@ -10,6 +10,9 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+import matplotlib
+
+matplotlib.use("Agg")
 
 from atommovr.utils.AtomArray import AtomArray
 from atommovr.tests.support.doubles import TimingSpyErrorModel

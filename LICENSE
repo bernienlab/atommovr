@@ -1,6 +1,10 @@
 MIT License
 
-Copyright (c) 2025 Nikhil K. Harle, Bo-Yu Chen, Bob Bao, and Hannes Bernien
+Copyright (c) 2025-2026 Nikhil K. Harle, Bo-Yu Chen, Bob Bao, Hannes Bernien,
+and Sascha Benz
+
+See the AUTHORS file for a full list of contributors and third-party
+attributions (slmsuite, spcm).
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

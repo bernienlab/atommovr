@@ -20,7 +20,7 @@ class Algorithm:
 
     e.g:
 
-    Supported configurations: Middle Fill (see `atommover.utils.core.Configurations`
+    Supported configurations: Middle Fill (see `atommovr.utils.core.Configurations`
     for a list of configurations).
     """
 
@@ -43,7 +43,7 @@ class Algorithm:
 
         **do_ejection** : bool, optional (default = False)
             argument to run an ejection subroutine(see
-            `atommover.algorithms.source.ejection.py` for the protocol).
+            `atommovr.algorithms.source.ejection.py` for the protocol).
 
         any other (optional!) kwargs you see fit to include :)
 
@@ -100,10 +100,12 @@ class Algorithm:
                 target, n_species
             )
         else:
+            # For ejection mode we check the entire array. `get_effective_target_grid`
+            # returns exclusive end indices (Python slice semantics). To be
+            # consistent, set `end_row` and `end_col` to the array shape
+            # (exclusive upper bounds) rather than inclusive indices.
             start_row, start_col = 0, 0
             end_row, end_col = np.shape(state)[:2]
-            end_row -= 1
-            end_col -= 1
 
         if np.shape(state) != np.shape(target):
             print(
@@ -113,14 +115,14 @@ class Algorithm:
 
         if n_species == 1:
             if np.array_equal(
-                state[start_row : end_row + 1, start_col : end_col + 1],
-                target[start_row : end_row + 1, start_col : end_col + 1],
+                state[start_row:end_row, start_col:end_col],
+                target[start_row:end_row, start_col:end_col],
             ):
                 success_flag = True
         elif n_species == 2:
             if np.array_equal(
-                state[start_row : end_row + 1, start_col : end_col + 1, :],
-                target[start_row : end_row + 1, start_col : end_col + 1, :],
+                state[start_row:end_row, start_col:end_col, :],
+                target[start_row:end_row, start_col:end_col, :],
             ):
                 success_flag = True
 
@@ -166,6 +168,10 @@ def get_effective_target_grid(target, n_species=1):
         if 1 in col1:
             end_col = n_cols - 1 - col_ind
             break
+
+    # Convert inclusive indices to exclusive bounds for safe slicing.
+    end_row += 1
+    end_col += 1
     try:
         return start_row, end_row, start_col, end_col
     except UnboundLocalError as ule:

@@ -267,7 +267,7 @@ def generate_cost_matrix(current_positions, target_positions, metric="euclidean"
 # Converting linear bottleneck assignment problem (LBAP) to linear sum assignment (Hungarian) problem (LSAP)
 # Algorithm taken from the following paper:
 # Kuo, CC., Nicholls, G. A turnpike approach to solving the linear bottleneck assignment problem.
-# Int J Adv Manuf Technol 71, 1059–1068 (2014). https://doi.org/10.1007/s00170-013-5464-1
+# Int J Adv Manuf Technol 71, 1059-1068 (2014). https://doi.org/10.1007/s00170-013-5464-1
 
 
 def get_Zstar_lower_bound(matrix):

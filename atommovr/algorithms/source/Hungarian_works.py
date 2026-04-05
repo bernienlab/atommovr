@@ -477,18 +477,18 @@ def generate_path(arrays, start, end):
 
 def define_current_and_target(matrix, target_config):
     current_positions = [
-        (x, y)
-        for x in range(len(matrix[0]))
-        for y in range(len(matrix))
-        if matrix[x][y] == 1
-        if target_config[x][y] == 0
+        (row, col)
+        for row in range(len(matrix))
+        for col in range(len(matrix[0]))
+        if matrix[row][col] == 1
+        if target_config[row][col] == 0
     ]  # NKH this should in theory not change anything...
     target_positions = [
-        (x, y)
-        for x in range(len(matrix[0]))
-        for y in range(len(matrix))
-        if target_config[x][y] == 1
-        if matrix[x][y] == 0
+        (row, col)
+        for row in range(len(matrix))
+        for col in range(len(matrix[0]))
+        if target_config[row][col] == 1
+        if matrix[row][col] == 0
     ]  # same here
     return current_positions, target_positions
 
@@ -537,67 +537,27 @@ def move_atom_and_show_grid_og(grid, start, end):
 
 
 def generate_AOD_cmds(matrix, move_seq):
-    row_num = len(matrix)
-    col_num = len(matrix[0])
-    horiz_AOD_cmds = np.zeros([row_num])
-    vert_AOD_cmds = np.zeros([col_num])
-    parallel_success_flag = True
-    op_matrix = copy.deepcopy(matrix)
+    # Keep Hungarian-local API while delegating command inference to the
+    # canonical converter, then preserve the legacy feasibility checks.
+    horiz_AOD_cmds, vert_AOD_cmds, parallel_success_flag = get_AOD_cmds_from_move_list(
+        matrix, move_seq, verify=False
+    )
 
-    # Generate AOD commands for a given row and column number
+    if not parallel_success_flag:
+        return horiz_AOD_cmds, vert_AOD_cmds, False
+
     for move in move_seq:
-        # Chnage the status of vertical AOD commands
-        if move.from_row > move.to_row:
-            if vert_AOD_cmds[move.from_row] == 0:
-                vert_AOD_cmds[move.from_row] = 3
-            elif vert_AOD_cmds[move.from_row] != 3:
-                parallel_success_flag = False
-                break
-        elif move.from_row < move.to_row:
-            if vert_AOD_cmds[move.from_row] == 0:
-                vert_AOD_cmds[move.from_row] = 2
-            elif vert_AOD_cmds[move.from_row] != 2:
-                parallel_success_flag = False
-                break
-        else:
-            if vert_AOD_cmds[move.from_row] == 0:
-                vert_AOD_cmds[move.from_row] = 1
-            elif vert_AOD_cmds[move.from_row] != 1:
-                parallel_success_flag = False
-                break
+        if matrix[move.from_row][move.from_col] == 0:
+            return horiz_AOD_cmds, vert_AOD_cmds, False
 
-        # Change the status of horizontal AOD commands
-        if move.from_col > move.to_col:
-            if horiz_AOD_cmds[move.from_col] == 0:
-                horiz_AOD_cmds[move.from_col] = 3
-            elif horiz_AOD_cmds[move.from_col] != 3:
-                parallel_success_flag = False
-                break
-        elif move.from_col < move.to_col:
-            if horiz_AOD_cmds[move.from_col] == 0:
-                horiz_AOD_cmds[move.from_col] = 2
-            elif horiz_AOD_cmds[move.from_col] != 2:
-                parallel_success_flag = False
-                break
-        else:
-            if horiz_AOD_cmds[move.from_col] == 0:
-                horiz_AOD_cmds[move.from_col] = 1
-            elif horiz_AOD_cmds[move.from_col] != 1:
-                parallel_success_flag = False
-                break
+    move_list = get_move_list_from_AOD_cmds(horiz_AOD_cmds, vert_AOD_cmds)
+    matrix_from_AOD = move_atoms_noiseless(copy.deepcopy(matrix), move_list)
+    matrix_from_seq = move_atoms_noiseless(
+        copy.deepcopy(matrix), copy.deepcopy(move_seq)
+    )
 
-        # Check if there is an atom from source position
-        if op_matrix[move.from_row][move.from_col] == 0:
-            parallel_success_flag = False
-            break
-
-    if parallel_success_flag:
-        move_list = get_move_list_from_AOD_cmds(vert_AOD_cmds, horiz_AOD_cmds)
-        matrix_from_AOD, _ = move_atoms(copy.deepcopy(matrix), move_list)
-        matrix_from_seq, _ = move_atoms(copy.deepcopy(matrix), move_seq)
-
-        if not np.array_equal(matrix_from_AOD, matrix_from_seq):
-            parallel_success_flag = False
+    if not np.array_equal(matrix_from_AOD, matrix_from_seq):
+        parallel_success_flag = False
 
     return horiz_AOD_cmds, vert_AOD_cmds, parallel_success_flag
 
@@ -737,7 +697,7 @@ def regroup_parallel_moves(matrix, move_seqq):
                     continue
                 sanit_check_matrix = copy.deepcopy(matrix_copy)
                 total_atom_num_init = np.sum(sanit_check_matrix)
-                matrix_copy, _ = move_atoms(matrix_copy, parallel_moves_test)
+                matrix_copy = move_atoms_noiseless(matrix_copy, parallel_moves_test)
                 total_atom_num_final = np.sum(matrix_copy)
 
                 if total_atom_num_init == total_atom_num_final:
@@ -750,7 +710,7 @@ def regroup_parallel_moves(matrix, move_seqq):
 
         sanit_check_matrix = copy.deepcopy(matrix_copy)
         total_atom_num_init = np.sum(sanit_check_matrix)
-        matrix_copy, _ = move_atoms(matrix_copy, parallel_moves)
+        matrix_copy = move_atoms_noiseless(matrix_copy, parallel_moves)
         total_atom_num_final = np.sum(matrix_copy)
 
         if total_atom_num_init == total_atom_num_final:
@@ -932,7 +892,7 @@ def transform_paths_into_moves(matrix, N_independent_moves_path):
             # 2.1.3 Implement the moves
             parallel_move_set.extend(moves_in_scan)
             for moves in moves_in_scan:
-                matrix, _ = move_atoms(matrix, moves)
+                matrix = move_atoms_noiseless(matrix, moves)
                 for move in moves:
                     if (move.from_row, move.from_col) in intersection_set:
                         if intersection_set[(move.from_row, move.from_col)] > 0:

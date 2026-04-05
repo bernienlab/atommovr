@@ -259,7 +259,7 @@ class TestREGROUP_PARALLEL_MOVES:
         # Within each group, verify canonicalization added ghost moves appropriately
         for group in groups:
             group_horiz, group_vert, _ = get_AOD_cmds_from_move_list(matrix, group)
-            
+
             # If group has both horizontal and vertical moves, check for tone product fills
             if group_horiz.any() and group_vert.any():
                 h_active = np.count_nonzero(group_horiz)
@@ -276,11 +276,12 @@ class TestREGROUP_PARALLEL_MOVES:
             (move.from_row, move.from_col, move.to_row, move.to_col) for move in moves
         }
         all_regrouped_serialized = {
-            (move.from_row, move.from_col, move.to_row, move.to_col) for move in all_regrouped
+            (move.from_row, move.from_col, move.to_row, move.to_col)
+            for move in all_regrouped
         }
-        assert all_regrouped_serialized.issuperset(original_serialized), (
-            "All original moves should be preserved in regrouped batches"
-        )
+        assert all_regrouped_serialized.issuperset(
+            original_serialized
+        ), "All original moves should be preserved in regrouped batches"
 
     # def test_matches_original_on_noninterfering_moves(self) -> None:
     #     """

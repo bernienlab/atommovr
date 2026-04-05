@@ -163,9 +163,9 @@ def collect_coords(
 
 def is_rb_source(arrays: AtomArray) -> Callable[[int, int], bool]:
     def _check(r, c, out_bound: bool = False):
-        return bool(arrays.matrix[r, c, 0] == 1 and (
-            arrays.target[r, c, 0] == 0 or out_bound
-        ))
+        return bool(
+            arrays.matrix[r, c, 0] == 1 and (arrays.target[r, c, 0] == 0 or out_bound)
+        )
 
     return _check
 
@@ -179,9 +179,9 @@ def is_rb_target(arrays: AtomArray) -> Callable[[int, int], bool]:
 
 def is_cs_source(arrays: AtomArray) -> Callable[[int, int], bool]:
     def _check(r, c, out_bound: bool = False):
-        return bool(arrays.matrix[r, c, 1] == 1 and (
-            arrays.target[r, c, 1] == 0 or out_bound
-        ))
+        return bool(
+            arrays.matrix[r, c, 1] == 1 and (arrays.target[r, c, 1] == 0 or out_bound)
+        )
 
     return _check
 

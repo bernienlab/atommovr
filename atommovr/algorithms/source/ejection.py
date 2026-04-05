@@ -9,7 +9,10 @@ from atommovr.utils.core import left_right_atom_in_row, top_bot_atom_in_col
 
 
 def ejection(
-    init_config: np.ndarray, target_config: np.ndarray, final_size=None
+    init_config: np.ndarray,
+    target_config: np.ndarray,
+    final_size=None,
+    method: str = "sublattice",
 ) -> tuple[list, np.ndarray]:
     matrix = copy.deepcopy(init_config)
     move_list = []

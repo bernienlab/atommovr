@@ -142,26 +142,29 @@ def find_smallest_l(matrix, target_config):
     n = len(matrix)
     center = n / 2
     delta = n % 2
-    
+
     total_atoms = int(np.sum(matrix))
     total_targets = int(np.sum(target_config))
-    
+
     # Early exit: impossible to satisfy
     if total_atoms < total_targets:
         raise ValueError(
             f"Insufficient atoms ({total_atoms}) to satisfy targets ({total_targets})"
         )
-    
+
     smallest_l = 1
     max_l = n  # safety limit
-    
+
     while smallest_l <= max_l:
         left_bound = int(center - smallest_l + delta)
         right_bound = int(center + smallest_l)
-        if np.sum(matrix[left_bound:right_bound, left_bound:right_bound]) >= total_targets:
+        if (
+            np.sum(matrix[left_bound:right_bound, left_bound:right_bound])
+            >= total_targets
+        ):
             return smallest_l
         smallest_l += 1
-    
+
     raise RuntimeError("Could not find sufficient area for atoms")
 
 

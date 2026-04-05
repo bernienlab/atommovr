@@ -1,9 +1,10 @@
 ## Modified Balance and Compact algorithm
+from atommovr.utils.move_utils import Move, move_atoms
+
 import numpy as np
 import copy
 
 from atommovr.utils.Move import Move
-from atommovr.utils.move_utils import move_atoms
 
 # Balance and Compact
 

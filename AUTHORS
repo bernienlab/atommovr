@@ -1,0 +1,50 @@
+# Authors
+
+## Original authors
+
+Nikhil K. Harle
+Bo-Yu Chen
+Bob Bao
+Hannes Bernien
+
+These authors created the core atommovr framework, including the algorithm
+base class, error model base class, move utilities, AtomArray, and the initial
+benchmark infrastructure.
+
+## Additional contributions
+
+Sascha Benz
+Ludwig-Maximilians-Universitaet Muenchen, Ryd-Yb tweezer array group
+2025-2026
+Imaging pipeline, PCFA rearrangement algorithm, Tetris rearrangement algorithm,  AWG controller for Spectrum Instrumentation M4i.6631-x8 cards with DDS cores: RFConverter, AWGBatch, AODSettings, RFRamp, and core-assignment logic,  DDS execution strategies: ramp, pattern, and camera-triggered modes, atommovr production controller, Benchmark and analysis scripts (run_rearranging_benchmarks.py and extension of benchmarking.py), Demonstration scripts (demo_awg_control.py, demo_pipeline.py, imaging_demo.py), Image scaling and blob parameter optimisation scripts, Test suite extensions (test_awg_control.py, test_controller_pipeline.py, test_imaging.py additions)
+
+## Third-party code and attributions
+
+### slmsuite
+
+Portions of `atommovr/utils/imaging/extraction.py` (the Extractor class and
+related extraction helpers) were adapted from the slmsuite project.
+
+  Project:   slmsuite
+  Authors:   slmsuite Developers (2021-2025)
+  License:   MIT
+  Source:    https://github.com/slmsuite/slmsuite
+
+The original MIT license and copyright notice are preserved in the source file
+header. Modifications made during adaptation are covered by this repository's
+MIT license.
+
+### spcm (Spectrum Instrumentation Python SDK)
+
+The AWG controller and DDS strategy modules use the `spcm` Python package,
+which is the official Python SDK for Spectrum Instrumentation hardware.
+
+  Product:   spcm Python package
+  Vendor:    Spectrum Instrumentation GmbH
+  Source:    https://github.com/SpectrumInstrumentation/spcm
+             https://pypi.org/project/spcm/
+  License:   MIT (as of spcm >= 0.4)
+
+The spcm package is a dependency of this project and is not redistributed
+within the repository. Its copyright and license terms apply independently
+when installed.

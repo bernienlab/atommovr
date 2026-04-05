@@ -8,6 +8,10 @@ dependencies:
   - xarray
   - ipykernel
   - matplotlib
+  - scikit-image
+  - seaborn
+  - opencv
+  - scipy
   - setuptools # needed because lazy-build calls PPSU/setupc.py
   - pip
   - pip:

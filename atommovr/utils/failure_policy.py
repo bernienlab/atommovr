@@ -2,7 +2,7 @@
 Failure event bitmask policy (ordering + suppression rules).
 
 This module defines:
-- `FailureEvent`: tracks the physical mechanisms by which a `Move` can fail (see atommover.utils.Move for info on this class).
+- `FailureEvent`: tracks the physical mechanisms by which a `Move` can fail (see atommovr.utils.Move for info on this class).
 - `FailureBit`: bit positions for recording multiple failure events per `Move`.
 - `FailureFlag`: tracks the simulation outcome of a move.
 - `FAILURE_EVENT_TO_FLAG`: dictionary mapping events to flags for use in simulation.

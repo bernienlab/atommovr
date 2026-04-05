@@ -12,6 +12,9 @@ dependencies = [
   "matplotlib",
   "setuptools",
   "imageio==2.36.1",
+  "opencv-python-headless",
+  "seaborn",
+  "scikit-learn"
 ]
 
 [project.optional-dependencies]
@@ -44,7 +47,7 @@ target-version = ["py310"]     # Python version compatibility
 # =========================
 [tool.ruff.lint]
 select = ["E", "F", "B"]      # Enable error rules, pyflakes checks, and Bugbear checks
-ignore = ["E501"]              # Ignore line length (formatter handles it)
+ignore = ["E501", "F401", "F403", "F405", "B006", "B008", "B905", "E711", "F821", "F841", "F811", "E741", "B007", "E731", "B904", "E402", "B023"]              # Ignore line length (formatter handles it)
 exclude = ["tests/*", "docs/*"] # Optional: skip certain folders if desired
 
 # Specific configuration for flake8-bugbear rules

@@ -1,6 +1,6 @@
 import numpy as np
 
-from atommovr.utils.animation import (
+from atommovr.utils.imaging.animation import (
     _get_inds_for_circ_matr_plot,
     _dual_species_get_inds_for_circ_matr_plot,
     _check_and_fix_lims,

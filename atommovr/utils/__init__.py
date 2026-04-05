@@ -4,7 +4,7 @@ from atommovr.utils.aod_timing import (
     _get_pickup_accel_flags,
     _classify_new_and_continuing_tones,
 )
-from atommovr.utils.animation import (
+from atommovr.utils.imaging.animation import (
     single_species_image,
     dual_species_image,
     make_single_species_gif,

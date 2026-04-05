@@ -71,7 +71,8 @@ class BuildSharedLibrary(build_ext):
                 extra_postargs=ext.extra_compile_args,
             )
 
-            lib_path = os.path.join(output_dir, "libmatching_for_PPSU.so")
+            lib_name = "libmatching_for_PPSU.dll" if sys.platform == "win32" else "libmatching_for_PPSU.so"
+            lib_path = os.path.join(output_dir, lib_name)
             self.compiler.link_shared_object(
                 objects,
                 lib_path,

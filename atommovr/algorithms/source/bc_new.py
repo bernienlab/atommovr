@@ -264,13 +264,6 @@ def balance_rows(init_config: np.ndarray, target_config: np.ndarray, i: int, j: 
     diff_top = n_atoms_top - n_req_top
     diff_bot = n_atoms_bot - n_req_bot
     if (diff_top + diff_bot) < 0:
-        print(
-            "the problem is not enough atoms",
-            diff_top,
-            diff_bot,
-            "total atoms:",
-            _int_sum(init_config),
-        )
         raise ValueError(
             f"Insufficient number of atoms: deficit in rows {i}-{m-1} is {diff_top} and deficit in rows {m}-{j} is {diff_bot}."
         )

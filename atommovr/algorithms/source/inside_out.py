@@ -28,9 +28,16 @@ from atommovr.algorithms.source.inside_out_utils import (
 )
 
 
-def inside_out_algorithm(rbcs_arrays: AtomArray, round_lim: int = 50):
+def inside_out_algorithm(
+    rbcs_arrays: AtomArray,
+    do_ejection: bool = False,
+    round_lim: int = 50,
+):
     """
     Inside out rearrangement algorithm proposed by the Bernien lab at the University of Chicago.
+
+    ``do_ejection`` is accepted for API compatibility with algorithm wrappers.
+    The current InsideOut implementation does not perform an ejection stage.
     """
     arrays = copy.deepcopy(rbcs_arrays)
     move_list = []

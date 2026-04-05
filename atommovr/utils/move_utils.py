@@ -266,13 +266,12 @@ def move_atoms(
         Error model used to generate probabilistic failure flags for the move set.
     look_for_flag
         Whether to consider failure flags in addition to Move.fail_event (legacy compatibility).
-
     Returns
     -------
     matrix_out
         Updated occupancy matrix (same dtype as `init_matrix`).
     failed_moves
-        List of Move objects that did not succeed.
+        List of indices of moves that failed.
     flags
         List of integer FailureFlag values for the failed moves.
     """
@@ -424,86 +423,104 @@ def _apply_moves(
         duplicate_move_inds = []
     failed_moves = []
     flags = []
+
+    def _resolve_indices(
+        r: int,
+        c: int,
+        mat: NDArray,
+    ) -> tuple[int, int, bool]:
+        """Resolve source indices and detect legacy swapped (col,row) convention."""
+        n_rows, n_cols = mat.shape[0], mat.shape[1]
+        if 0 <= r < n_rows and 0 <= c < n_cols:
+            return r, c, False
+        if 0 <= c < n_rows and 0 <= r < n_cols:
+            return c, r, True
+        raise IndexError(
+            f"Index out of bounds for both orientations: ({r},{c}) on shape {mat.shape}"
+        )
+
     # evaluate and run each move
     for move_ind, move in enumerate(moves):
         if move_ind in duplicate_move_inds:
             failed_moves.append(move_ind)
             flags.append(move.fail_flag)
-        else:
-            # fail flag code for the move: SUCCESS[0], PICKUPFAIL[1], PUTDOWNFAIL[2], NOATOM[3]
-            # move.fail_flag = random.choices([0, 1, 2], weights=[1-pickup_fail_rate-putdown_fail_rate, pickup_fail_rate, putdown_fail_rate])[0]
+            continue
 
-            # Classify the move as:
-            #   a) legal (there is an atom in the pickup position and NO atom in the putdown position),
-            #   b) illegal (there is an atom in the pickup pos and an atom in the putdown pos)
-            #   c) eject (there is an atom in the pickup pos and the putdown pos is outside of the array)
-            #   d) no atom to move (there is NO atom in the pickup pos)
+        try:
+            from_r, from_c, swapped = _resolve_indices(
+                move.from_row, move.from_col, init_matrix
+            )
+        except IndexError:
+            failed_moves.append(move_ind)
+            flags.append(move.fail_flag)
+            continue
 
-            # if there is an atom in the pickup pos
-            # if int(init_matrix[move.from_row][move.from_col]) == 1: # NB: deprecated in NumPy 1.25
-            if (
-                int(np.sum(init_matrix[move.from_row, move.from_col], dtype=np.int64))
-                == 1
-            ):
-                try:
-                    # check if there is NO atom in the putdown pos
-                    if (
-                        move.to_col >= 0
-                        and move.to_row >= 0
-                        and int(
-                            np.sum(
-                                init_matrix[move.to_row, move.to_col], dtype=np.int64
-                            )
-                        )
-                        == 0
-                    ):  # int(init_matrix[move.to_row][move.to_col]) == 0:
-                        movetype = MoveType.LEGAL_MOVE
-                    # check if there is an atom in the putdown pos
-                    elif (
-                        move.to_col >= 0
-                        and move.to_row >= 0
-                        and int(
-                            np.sum(
-                                init_matrix[move.to_row, move.to_col], dtype=np.int64
-                            )
-                        )
-                        == 1
-                    ):  # int(init_matrix[move.to_row][move.to_col]) == 1:
-                        movetype = MoveType.ILLEGAL_MOVE
-                    elif move.to_col >= 0 and move.to_row >= 0:
-                        raise Exception(
-                            f"{int(init_matrix[move.to_row][move.to_col][0])} is not a valid matrix entry."
-                        )
-                    else:
-                        raise IndexError
-                except IndexError:
-                    movetype = MoveType.EJECT_MOVE
-            else:  # if there is no atom in the pickup pos
-                movetype = MoveType.NO_ATOM_TO_MOVE
-                move.fail_flag = 3
+        # fail flag code for the move: SUCCESS[0], PICKUPFAIL[1], PUTDOWNFAIL[2], NOATOM[3]
+        # move.fail_flag = random.choices([1-pickup_fail_rate-putdown_fail_rate, pickup_fail_rate, putdown_fail_rate])[0]
 
-            # if the move fails due to the atom not being picked up or put down correctly, make a note of this.
-            if move.fail_flag != 0 and look_for_flag:
-                failed_moves.append(move_ind)
-                flags.append(move.fail_flag)
-                if move.fail_flag == 2:  # PUTDOWNFAIL, see above
-                    if matrix_out[move.from_row][move.from_col] == 0:
-                        raise Exception(
-                            f"Error occured in MoveType. There is NO atom at ({move.from_row}, {move.from_col})."
-                        )
-                    matrix_out[move.from_row][move.from_col] -= 1
-            # elif the move is valid, implement it
-            elif movetype == MoveType.LEGAL_MOVE or movetype == MoveType.ILLEGAL_MOVE:
-                if matrix_out[move.from_row][move.from_col] > 0:
-                    matrix_out[move.from_row][move.from_col] -= 1
-                    matrix_out[move.to_row][move.to_col] += 1
-            # elif the move is an ejection move or moves an atom into an occupied site, remove the atom(s)
-            elif movetype == MoveType.EJECT_MOVE:
-                if matrix_out[move.from_row][move.from_col] == 0:
+        # Classify the move as:
+        #   a) legal (there is an atom in the pickup position and NO atom in the putdown position),
+        #   b) illegal (there is an atom in the pickup pos and an atom in the putdown pos)
+        #   c) eject (there is an atom in the pickup pos and the putdown pos is outside of the array)
+        #   d) no atom to move (there is NO atom in the pickup pos)
+        if int(np.sum(init_matrix[from_r, from_c], dtype=np.int64)) == 1:
+            try:
+                # Resolve putdown indices using the same orientation as pickup.
+                to_r, to_c = (
+                    (move.to_row, move.to_col)
+                    if not swapped
+                    else (move.to_col, move.to_row)
+                )
+                if (
+                    to_c >= 0
+                    and to_r >= 0
+                    and int(np.sum(init_matrix[to_r, to_c], dtype=np.int64)) == 0
+                ):
+                    movetype = MoveType.LEGAL_MOVE
+                elif (
+                    to_c >= 0
+                    and to_r >= 0
+                    and int(np.sum(init_matrix[to_r, to_c], dtype=np.int64)) == 1
+                ):
+                    movetype = MoveType.ILLEGAL_MOVE
+                elif to_c >= 0 and to_r >= 0:
                     raise Exception(
-                        f"Error occured in MoveType assignment. There is NO atom at ({move.from_row}, {move.from_col})."
+                        f"{int(init_matrix[to_r][to_c])} is not a valid matrix entry."
                     )
-                matrix_out[move.from_row][move.from_col] -= 1
+                else:
+                    raise IndexError
+            except IndexError:
+                movetype = MoveType.EJECT_MOVE
+        else:
+            movetype = MoveType.NO_ATOM_TO_MOVE
+            move.fail_flag = 3
+
+        # If the move fails due to pickup/putdown stochastic failure, record it.
+        if move.fail_flag != 0 and look_for_flag:
+            failed_moves.append(move_ind)
+            flags.append(move.fail_flag)
+            if move.fail_flag == 2:  # PUTDOWNFAIL
+                if matrix_out[from_r][from_c] == 0:
+                    raise Exception(
+                        f"Error occured in MoveType. There is NO atom at ({from_r}, {from_c})."
+                    )
+                matrix_out[from_r][from_c] -= 1
+        elif movetype == MoveType.LEGAL_MOVE or movetype == MoveType.ILLEGAL_MOVE:
+            to_r, to_c = (
+                (move.to_row, move.to_col)
+                if not swapped
+                else (move.to_col, move.to_row)
+            )
+            if matrix_out[from_r][from_c] > 0:
+                matrix_out[from_r][from_c] -= 1
+                if 0 <= to_r < matrix_out.shape[0] and 0 <= to_c < matrix_out.shape[1]:
+                    matrix_out[to_r][to_c] += 1
+        elif movetype == MoveType.EJECT_MOVE:
+            if matrix_out[from_r][from_c] == 0:
+                raise Exception(
+                    f"Error occured in MoveType assignment. There is NO atom at ({from_r}, {from_c})."
+                )
+            matrix_out[from_r][from_c] -= 1
     return matrix_out, failed_moves, flags
 
 

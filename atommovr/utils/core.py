@@ -4,7 +4,7 @@ import math
 import numpy as np
 from enum import IntEnum
 from numpy.typing import NDArray
-from typing import Tuple
+from typing import Optional, Tuple
 
 ###########
 # Classes #
@@ -143,6 +143,24 @@ class ArrayGeometry(IntEnum):
     TRIANGULAR = 2  # NSY
     BRAVAIS = 3  # NSY
     DECORATED_BRAVAIS = 4  # NSY
+    RECTANGLE_TALL = (
+        5  # rectangle taller than it is wide, useful for rectangular target configs
+    )
+
+
+class ArrayGeometrySpec:
+    """Specification for desired loading geometry.
+
+    - kind: an ArrayGeometry member.
+    - params: optional dict of parameters (algorithm-specific).
+    """
+
+    kind: ArrayGeometry
+    params: Optional[dict] = None
+
+    def __init__(self, kind: ArrayGeometry, params: Optional[dict] = None) -> None:
+        self.kind = kind
+        self.params = params
 
 
 #############
@@ -151,8 +169,13 @@ class ArrayGeometry(IntEnum):
 
 
 def _coerce_rng(rng: np.random.Generator | None) -> np.random.Generator:
-    """Return a numpy Generator, creating a fresh one if None."""
-    return np.random.default_rng() if rng is None else rng
+    """Return a numpy Generator, deriving deterministic seeds from np.random."""
+    if rng is not None:
+        return rng
+
+    # Preserve test reproducibility when callers rely on `np.random.seed(...)`.
+    seed = int(np.random.randint(0, np.iinfo(np.uint32).max, dtype=np.uint32))
+    return np.random.default_rng(seed)
 
 
 def random_loading(
@@ -235,9 +258,10 @@ def generate_random_init_target_configs(
 def generate_random_init_configs(
     n_shots: int,
     load_prob: float,
-    max_sys_size: int,
+    max_sys_size: int | None = None,
     n_species: int = 1,
     rng: np.random.Generator | None = None,
+    shape: list | tuple | None = None,
 ) -> list:
     """
     Generates random initial atom array configurations.
@@ -248,44 +272,54 @@ def generate_random_init_configs(
         The number of configurations (shots) to generate.
     load_prob : float
         The probability of an individual site being occupied by an atom.
-    max_sys_size : int
-        The row and column size of the square target array.
+    max_sys_size : int, optional
+        The row and column size of a square target array. Ignored if `shape` is provided.
+        Either `max_sys_size` or `shape` must be specified.
     n_species : int, optional
         The number of atomic species (1 or 2). Default is 1.
+    rng : numpy.random.Generator, optional
+        Random number generator for reproducibility.
+    shape : list or tuple, optional
+        Rectangular shape as [rows, cols]. If provided, `max_sys_size` is ignored.
+        Either `max_sys_size` or `shape` must be specified.
 
     Returns
     -------
     list of numpy.ndarray
         A list of generated configurations. If `n_species` is 1, arrays are 2D.
-        If `n_species` is 2, arrays are 3D with shape (max_sys_size, max_sys_size, 2).
+        If `n_species` is 2, arrays are 3D with shape (..., ..., 2).
 
     Raises
     ------
     ValueError
-        If `n_species` is not 1 or 2.
+        If `n_species` is not 1 or 2, or if neither `max_sys_size` nor `shape` is provided.
     """
+    # Determine array dimensions
+    if shape is not None:
+        rows, cols = int(shape[0]), int(shape[1])
+    elif max_sys_size is not None:
+        rows, cols = max_sys_size, max_sys_size
+    else:
+        raise ValueError(
+            "Either `max_sys_size` (for square arrays) or `shape` (for rectangular) must be provided."
+        )
+
     rng = _coerce_rng(rng)
 
     init_config_storage = []
 
     for _ in range(n_shots):
         if n_species == 1:
-            initial_config = random_loading(
-                [max_sys_size, max_sys_size], load_prob, rng=rng
-            )
+            initial_config = random_loading([rows, cols], load_prob, rng=rng)
 
         elif n_species == 2:
-            initial_config = np.zeros((max_sys_size, max_sys_size, 2), dtype=np.uint8)
+            initial_config = np.zeros((rows, cols, 2), dtype=np.uint8)
 
             dual_species_prob = 2 - 2 * math.sqrt(1 - load_prob)
             p_each = dual_species_prob / 2
 
-            initial_config[:, :, 0] = random_loading(
-                [max_sys_size, max_sys_size], p_each, rng=rng
-            )
-            initial_config[:, :, 1] = random_loading(
-                [max_sys_size, max_sys_size], p_each, rng=rng
-            )
+            initial_config[:, :, 0] = random_loading([rows, cols], p_each, rng=rng)
+            initial_config[:, :, 1] = random_loading([rows, cols], p_each, rng=rng)
 
             # Resolve double-occupancy sites by dropping one species uniformly at random.
             both = (initial_config[:, :, 0] == 1) & (initial_config[:, :, 1] == 1)
@@ -527,6 +561,10 @@ def atom_loss(
     move_time: float,
     lifetime: float = 30,
     rng: np.random.Generator | None = None,
+    pickup_fail_rate: float = 0.0,
+    putdown_fail_rate: float = 0.0,
+    move_distance_penalty: float = 0.0,
+    aod_jitter_probability: float = 0.0,
 ) -> Tuple[NDArray, bool]:
     """
     Sample atom loss over a finite evolution time.
@@ -541,6 +579,15 @@ def atom_loss(
         Vacuum-limited lifetime of a single atom in a tweezer.
     rng : np.random.Generator | None, optional
         Random number generator.
+    pickup_fail_rate : float, optional
+        Base probability of failure for pickup operations.
+    putdown_fail_rate : float, optional
+        Base probability of failure for putdown operations.
+    move_distance_penalty : float, optional
+        Penalty for longer move distances.
+    aod_jitter_probability : float, optional
+        Probability of jitter in AOD pointing.
+
 
     Returns
     -------
@@ -558,6 +605,12 @@ def atom_loss(
         raise ValueError(f"`lifetime` must be > 0; got {lifetime}.")
 
     p_survive = float(np.exp(-move_time / lifetime))
+    p_survive *= (
+        (1 - pickup_fail_rate)
+        * (1 - putdown_fail_rate)
+        * (1 - move_distance_penalty)
+        * (1 - aod_jitter_probability)
+    )
     rng = _coerce_rng(rng)
 
     # Build a 2D survival mask
@@ -745,3 +798,77 @@ def generate_middle_fifty(length: int, filling_threshold: float = 0.5) -> list[i
     while (max_L**2) / (length**2) >= filling_threshold:
         max_L -= 1
     return [max_L, max_L]
+
+
+def array_shape_for_geometry(
+    geometry_spec, target_size: int, loading_prob: float = 0.6
+) -> tuple[int, int]:
+    """Return (rows, cols) for a loading array given `geometry_spec`.
+
+    Accepted `geometry_spec` types:
+    - None: square fallback (see rules).
+    - `ArrayGeometrySpec` instance: follows `kind`.
+    - tuple/list of two ints: interpreted as (rows, cols).
+    """
+    try:
+        t = int(target_size)
+        if t <= 0:
+            raise ValueError
+    except Exception:
+        raise ValueError("target_size must be a positive integer.")
+
+    # If a plain two-int tuple/list provided -> coerce
+    if isinstance(geometry_spec, (list, tuple)) and len(geometry_spec) == 2:
+        try:
+            rows = int(geometry_spec[0])
+            cols = int(geometry_spec[1])
+        except Exception:
+            raise ValueError("Geometry tuple/list must contain two integers.")
+        rows = max(rows, t)
+        cols = max(cols, t)
+        return rows, cols
+
+    # If None or SQUARE: square fallback scaled by loading_prob
+    if geometry_spec is None or (
+        isinstance(geometry_spec, ArrayGeometrySpec)
+        and geometry_spec.kind == ArrayGeometry.SQUARE
+    ):
+        side = int(math.ceil(math.sqrt(t)))
+        scale = (
+            int(math.ceil(1.0 / math.sqrt(float(loading_prob))))
+            if loading_prob and loading_prob > 0
+            else 1
+        )
+        side = side * scale
+        # Ensure some donor margin around the target so rearrangement algorithms
+        # can source atoms from outside the target region. Make array at least
+        # target_size + 2 on a side.
+        side = max(side, t + 2)
+        return side, side
+
+    # ArrayGeometrySpec handling
+    if isinstance(geometry_spec, ArrayGeometrySpec):
+        if geometry_spec.kind == ArrayGeometry.RECTANGLE_TALL:
+            params = geometry_spec.params or {}
+            preferred_width_factor = float(params.get("preferred_width_factor", 2.0))
+            min_extra_columns = int(params.get("min_extra_columns", 2))
+            rows = int(t)
+            cols = int(math.ceil(t * preferred_width_factor))
+            cols = max(cols, t + min_extra_columns)
+            rows = max(rows, t)
+            cols = max(cols, t)
+            return rows, cols
+        # Fallback: unknown kinds -> square fallback
+        side = int(math.ceil(math.sqrt(t)))
+        scale = (
+            int(math.ceil(1.0 / math.sqrt(float(loading_prob))))
+            if loading_prob and loading_prob > 0
+            else 1
+        )
+        side = side * scale + 2
+        side = max(side, t)
+        return side, side
+
+    raise ValueError(
+        "Unsupported `geometry_spec` type; expected ArrayGeometrySpec, (rows,cols), or None."
+    )
