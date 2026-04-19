@@ -3,15 +3,15 @@ Integration seam tests for the move-event pipeline.
 
 These tests verify compatibility across the following modules:
 
-- `atommover.utils.aod_timing`
+- `atommovr.utils.aod_timing`
   (detects per-move pickup/accel/decel/putdown eligibility from AOD command timing)
-- `atommover.utils.ErrorModel`
+- `atommovr.utils.ErrorModel`
   (applies deterministic/stochastic failure bits into a per-move event mask)
-- `atommover.utils.error_utils`
+- `atommovr.utils.error_utils`
   (finalizes event masks: suppression, primary-event resolution, and write-back to Move objects)
-- `atommover.utils.failure_policy`
+- `atommovr.utils.failure_policy`
   (bit semantics, suppression rules, and primary-event precedence)
-- `atommover.utils.Move`
+- `atommovr.utils.Move`
   (stores per-move failure event / failure flag)
 
 Scope
