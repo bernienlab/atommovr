@@ -1,7 +1,7 @@
 """Tetris atom-rearrangement algorithm.
 
 This module implements the row-by-row "Tetrimino construction" and column-by-column
-"Tetrimino elimination" phases described in Phys. Rev. Applied 19, 054032.
+"Tetrimino elimination" phases described in Wang et al. [1]_.
 The implementation mirrors the hardware-friendly workflow:
 
 1. Row processing assigns atoms from each reservoir row to the columns that still

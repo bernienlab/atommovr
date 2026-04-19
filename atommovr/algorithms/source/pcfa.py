@@ -1,6 +1,6 @@
 """Parallel Compression Filling Algorithm (PCFA).
 
-The implementation follows the three-stage protocol described in the PCFA paper and
+The implementation follows the three-stage protocol described in the PCFA paper [1]_ and
 enforces collision-free row motion by construction:
 
 1. Initial validation: ensure the array contains at least as many atoms as the target mask.
@@ -15,6 +15,11 @@ enforces collision-free row motion by construction:
 The planner returns ``(final_state, move_batches, success_flag)`` where ``success_flag``
 indicates whether the target mask is completely filled after executing the generated
 move batches.
+
+References
+----------
+.. [1] Y. Zhang et al., "A Fast Rearrangement Method for Defect-Free Atom Arrays,"
+       Photonics 12(2), 117 (2025). https://doi.org/10.3390/photonics12020117
 """
 
 from __future__ import annotations
