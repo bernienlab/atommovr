@@ -86,8 +86,8 @@ class TestArrayGeometry:
         assert ArrayGeometry.DECORATED_BRAVAIS == 4
 
     def test_enum_count(self):
-        """Test that there are exactly 5 geometry types."""
-        assert len(ArrayGeometry) == 5
+        """Test that there are exactly 6 geometry types."""
+        assert len(ArrayGeometry) == 6
 
     def test_enum_from_value(self):
         """Test lookup of enum by integer value."""
