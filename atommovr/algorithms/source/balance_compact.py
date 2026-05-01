@@ -1,9 +1,9 @@
-##Algorithm for the Balance and Compact Algorithm
-import numpy as np
 import copy
+import numpy as np
 
-from atommovr.utils.Move import Move
-from atommovr.utils.move_utils import move_atoms
+##Algorithm for the Balance and Compact Algorithm
+from atommovr.utils.move_utils import Move, move_atoms
+
 from atommovr.algorithms.source.ejection import ejection
 from atommovr.algorithms.source.generalized_balance import (
     right_move,
