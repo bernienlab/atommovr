@@ -11,7 +11,10 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.abspath(os.path.join(MODULE_DIR, "../../../"))
 PPSU_DIR = os.path.join(BASE_DIR, "PPSU2023")
 
-LIB_PATH = os.path.join(PPSU_DIR, "libmatching_for_PPSU.so")
+LIB_NAME = (
+    "libmatching_for_PPSU.dll" if sys.platform == "win32" else "libmatching_for_PPSU.so"
+)
+LIB_PATH = os.path.join(PPSU_DIR, LIB_NAME)
 SETUPC_PATH = os.path.join(PPSU_DIR, "setupc.py")
 
 

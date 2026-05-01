@@ -20,7 +20,7 @@ class Algorithm:
 
     e.g:
 
-    Supported configurations: Middle Fill (see `atommover.utils.core.Configurations`
+    Supported configurations: Middle Fill (see `atommovr.utils.core.Configurations`
     for a list of configurations).
     """
 
@@ -43,7 +43,7 @@ class Algorithm:
 
         **do_ejection** : bool, optional (default = False)
             argument to run an ejection subroutine(see
-            `atommover.algorithms.source.ejection.py` for the protocol).
+            `atommovr.algorithms.source.ejection.py` for the protocol).
 
         any other (optional!) kwargs you see fit to include :)
 

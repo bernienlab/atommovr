@@ -12,6 +12,8 @@ dependencies = [
   "matplotlib",
   "setuptools",
   "imageio==2.36.1",
+  "seaborn",
+  "scikit-learn"
 ]
 
 [project.optional-dependencies]

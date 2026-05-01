@@ -137,7 +137,7 @@ class TestCleanEmptyMoves:
 
         # Even if we pass invalid moves, atom count should be preserved
         move_list = [[Move(0, 0, 1, 1)]]
-        clean_empty_moves(aa, move_list)
+        _cleaned = clean_empty_moves(aa, move_list)
 
         assert _n_atoms(aa.matrix) == initial_count
 
