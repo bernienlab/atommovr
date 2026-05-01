@@ -34,7 +34,9 @@ void bttlThresholdInitializer(int *col_ptrs, int *col_ids, double *col_vals, int
 	int *fend_cols, int *fend_rows,
 	double *thrshld_g, int maxcrdmatch);
 
-
+#ifdef _WIN32
+__declspec(dllexport)
+#endif 
 int bttlThreshold(int *col_ptrs, int *col_ids, double *col_vals, int n, int m, int *match, int *row_match, 
 	int *row_ptrs, 
 	int *row_ids,

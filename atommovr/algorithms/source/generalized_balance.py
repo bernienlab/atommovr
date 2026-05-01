@@ -3,8 +3,8 @@ import copy
 import numpy as np
 from collections import deque
 
-from atommovr.utils.Move import Move
-from atommovr.utils.move_utils import move_atoms
+from atommovr.utils.move_utils import Move, move_atoms
+
 from atommovr.algorithms.source.ejection import ejection
 
 
@@ -547,6 +547,11 @@ def right_move(
         ):
             for shift in range(stuff, -1, -1):
                 moves_in_scan = []
+                # Skip shifts whose one-step-right destination would leave the grid.
+                # TODO: Audit right-edge termination logic; this guard prevents an IndexError
+                # but does not prove the surrounding right_move boundary logic is correct.
+                if target_col + shift + 1 >= len(matrix[0]):
+                    continue
                 for row in range(row_min, row_max + 1):
                     if (
                         matrix[row, target_col + shift] == 1

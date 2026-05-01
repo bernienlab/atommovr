@@ -329,6 +329,14 @@ class AtomArray:
         elif self.n_species == 2:
             dual_species_image(self.target)
 
+    def get_target(self) -> NDArray[np.uint8]:
+        """Return a copy of the target occupancy matrix.
+
+        This compatibility shim preserves the legacy getter-style API used by
+        older tests and downstream scripts.
+        """
+        return np.array(self.target, copy=True)
+
     def evaluate_moves(self, move_set: List) -> Tuple[float, List[int]]:
         """
         Execute a sequence of parallel move rounds and accumulate timing statistics.
