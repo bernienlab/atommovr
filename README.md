@@ -59,11 +59,18 @@ We gratefully thank Shraddha Anand, Will Eckner, Noah Glachman, Andy Goldschmidt
 
 ## Citation
 ```
-@article{HCBB2025atommovr,
-  title={atommovr: An open-source simulation framework for rearrangement in atomic arrays},
-  author={Nikhil K. Harle and Bo-Yu Chen and Bob Bao and Hannes Bernien},
-  journal={arXiv preprint arXiv:2508:02670},
-  year={2025}
+@article{Harle2026atommovropensource,
+  doi = {10.22331/q-2026-07-29-2177},
+  url = {https://doi.org/10.22331/q-2026-07-29-2177},
+  title = {atommovr: {A}n open-source simulation framework for rearrangement in atomic arrays},
+  author = {Harle, Nikhil K and Chen, Bo-Yu and Bao, Bob and Bernien, Hannes},
+  journal = {{Quantum}},
+  issn = {2521-327X},
+  publisher = {{Verein zur F{\"{o}}rderung des Open Access Publizierens in den Quantenwissenschaften}},
+  volume = {10},
+  pages = {2177},
+  month = jul,
+  year = {2026}
 }
 ```
 
